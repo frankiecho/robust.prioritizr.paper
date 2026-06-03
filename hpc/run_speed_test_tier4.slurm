@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=robust_pz_speed
-#SBATCH --array=281-360    # tasks 281-360: species 800/872, max observed 33.6GB
+#SBATCH --array=281-360%2    # tasks 281-360: species 800/872, max observed 33.6GB
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=48G
