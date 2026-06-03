@@ -170,6 +170,22 @@ nano hpc/config.env   # set HPC_USER, HPC_SCRATCH_DIR, SLURM_EMAIL, etc.
 
 ---
 
+## Step 6: Export SLURM_EMAIL to your login shell
+
+`#SBATCH` directives are parsed by SLURM **before** the job script runs, so
+`config.env` has not been sourced yet when they are evaluated. `SLURM_EMAIL`
+must be present in the submission environment for email notifications to work.
+
+Add it to `~/.bashrc` so it is always exported:
+
+```bash
+source hpc/config.env   # read the value you just filled in
+echo "export SLURM_EMAIL=$SLURM_EMAIL" >> ~/.bashrc
+source ~/.bashrc
+```
+
+---
+
 ## Step 7: Run the smoke test first
 
 ```bash
@@ -183,18 +199,20 @@ Check the log once it finishes:
 cat logs/test_*.out
 ```
 
-Expected output ends with solve times for 4 problems printed to stdout and
-`output/vic_soln_18_rep1.rds` written to disk.
+Expected output ends with a "Saved:" line for `output/vic_soln_18_rep1_scenario1.rds`
+and a solve time printed to stdout (tests scenario 1 only).
 
 ---
 
-## Step 8: Submit the full speed test (9 species counts × 10 replicates = 90 jobs)
+## Step 8: Submit the full speed test (9 species counts × 10 replicates × 4 scenarios = 360 jobs)
 
 ```bash
 cd $HPC_PROJECT_DIR
 ARRAY_JOB=$(sbatch --parsable hpc/run_speed_test.slurm)
 echo "Submitted array job: $ARRAY_JOB"
 ```
+
+Each task writes `output/vic_soln_{n}_rep{r}_scenario{s}.rds`.
 
 Monitor progress:
 
@@ -204,10 +222,22 @@ squeue -u $USER
 
 ---
 
-## Step 9: Submit the aggregation job (runs after all array tasks succeed)
+## Step 9: Submit the recombine job (runs after all array tasks succeed)
 
 ```bash
-sbatch --dependency=afterok:$ARRAY_JOB hpc/run_aggregation.slurm
+RECOMBINE_JOB=$(sbatch --parsable --dependency=afterok:$ARRAY_JOB hpc/run_recombine.slurm)
+echo "Submitted recombine job: $RECOMBINE_JOB"
+```
+
+This merges the 4 per-scenario files into one combined file per species × replicate:
+`output/vic_soln_{n}_rep{r}.rds`.
+
+---
+
+## Step 10: Submit the aggregation job (runs after recombine succeeds)
+
+```bash
+sbatch --dependency=afterok:$RECOMBINE_JOB hpc/run_aggregation.slurm
 ```
 
 This writes:
@@ -216,7 +246,7 @@ This writes:
 
 ---
 
-## Step 10: Generate the LaTeX table (run locally or on login node)
+## Step 11: Generate the LaTeX table (run locally or on login node)
 
 Copy outputs back to your local machine:
 

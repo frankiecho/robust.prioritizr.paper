@@ -1,6 +1,19 @@
 output/*
 *.DS_Store
 hpc/config.env
+
+# Logs from HPC runs
 logs/
 *.out
 *.err
+
+# Root-level HPC files rsync'd from M3 (canonical copies live in hpc/)
+HPC_GUIDE.md
+aggregate_results.R
+recombine_results.R
+run_aggregation.slurm
+run_one_species_count.R
+run_recombine.slurm
+run_speed_test.slurm
+test_setup.slurm
+test_smoke.slurm

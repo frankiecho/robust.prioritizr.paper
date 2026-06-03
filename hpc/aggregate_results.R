@@ -35,7 +35,8 @@ all_times <- map_dfr(num_species_vec, function(n) {
       num_species = n,
       replicate   = r,
       problem     = problem_names,
-      time_mins   = map_dbl(x, \(e) as.numeric(e$solve_time, units = "mins"))
+      time_mins   = map_dbl(x, \(e) if (is.null(e$soln)) NA_real_ else as.numeric(e$solve_time, units = "mins")),
+      error       = map_chr(x, \(e) if (!is.null(e$error)) e$error else NA_character_)
     )
   })
 })
