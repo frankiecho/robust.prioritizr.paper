@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=robust_pz_speed
-#SBATCH --array=1-120%2    # tasks 1-120: species 18/30/50, max observed 3.2GB
+#SBATCH --array=1-120    # tasks 1-120: species 18/30/50, max observed 3.2GB
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=4G
@@ -11,16 +11,14 @@
 #SBATCH --mail-type=FAIL
 #SBATCH --mail-user=${SLURM_EMAIL}
 
-# Load user config (sets GRB_LICENSE_FILE, GRB_LIB_PATH, HPC_PROJECT_DIR, etc.)
+# Load user config (sets HPC_PROJECT_DIR, SLURM_EMAIL, etc.)
 source ${SLURM_SUBMIT_DIR}/hpc/config.env
 
-# Load conda environment
+# Load conda environment and CPLEX module
 source /apps/anaconda/2024.02-1/etc/profile.d/conda.sh
 conda activate robust_pz
-
-# Gurobi license and shared library
-export GRB_LICENSE_FILE=${GRB_LICENSE_FILE}
-export LD_LIBRARY_PATH=${GRB_LIB_PATH}:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/fcho0021/nh53/cplex2220/cplex/bin/x86-64_linux:/usr/local/gcc/5.4.0/lib64:$LD_LIBRARY_PATH
+export PRIORITIZR_SOLVER=cplex
 
 # Map task ID (1-360) to species count, replicate, scenario
 # Layout: scenario varies fastest, then replicate, then species

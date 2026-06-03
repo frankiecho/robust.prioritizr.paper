@@ -4,6 +4,8 @@ hpc/config.env
 
 # Logs from HPC runs
 logs/
+*.out
+*.err
 
 # Root-level HPC files rsync'd from M3 (canonical copies live in hpc/)
 HPC_GUIDE.md
