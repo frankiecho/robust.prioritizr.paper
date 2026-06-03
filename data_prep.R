@@ -18,11 +18,7 @@ library(cli)
 # Data Preparation ----------------
 
 rp_data_prep <- function(num_species = 50) {
-  if (exists("num_species")) {
-    cli::cli_alert_info(glue::glue("Preparing data for {num_species} species"))
-  } else {
-    cli::cli_abort("num_species not defined")
-  }
+  cli::cli_alert_info(glue::glue("Preparing data for {num_species} species"))
 
   # Set core list of threatened species that must be included
   # the rest of the list are randomly drawn until we reach "num_species"
