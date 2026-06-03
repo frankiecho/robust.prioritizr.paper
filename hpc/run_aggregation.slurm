@@ -17,9 +17,6 @@ source ${SLURM_SUBMIT_DIR}/hpc/config.env
 source /apps/anaconda/2024.02-1/etc/profile.d/conda.sh
 conda activate robust_pz
 
-export GRB_LICENSE_FILE=${GRB_LICENSE_FILE}
-export LD_LIBRARY_PATH=${GRB_LIB_PATH}:$LD_LIBRARY_PATH
-
 echo "Aggregating speed test results: $(date)"
 cd $SLURM_SUBMIT_DIR
 Rscript hpc/aggregate_results.R

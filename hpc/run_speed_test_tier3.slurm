@@ -1,14 +1,14 @@
 #!/bin/bash
 #SBATCH --job-name=robust_pz_speed
-#SBATCH --array=1-360         # 9 species x 10 replicates x 4 scenarios
+#SBATCH --array=201-280    # tasks 201-280: species 400/600, max observed 21.3GB
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=32G
+#SBATCH --mem=28G
 #SBATCH --time=05:30:00
 #SBATCH --partition=comp
 #SBATCH --output=logs/speed_%A_%a.out
 #SBATCH --error=logs/speed_%A_%a.err
-#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-type=FAIL
 #SBATCH --mail-user=${SLURM_EMAIL}
 
 # Load user config (sets HPC_PROJECT_DIR, SLURM_EMAIL, etc.)

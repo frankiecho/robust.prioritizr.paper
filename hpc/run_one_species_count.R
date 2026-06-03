@@ -12,12 +12,15 @@ scenario     <- as.integer(args[3])
 # Threads from SLURM environment
 num_threads  <- as.integer(Sys.getenv("SLURM_CPUS_PER_TASK", unset = "1"))
 
+# Solver: set via PRIORITIZR_SOLVER env var in SLURM scripts (default: cplex)
+solver <- Sys.getenv("PRIORITIZR_SOLVER", unset = "cplex")
+
 source(here::here("data_prep.R"))
 source(here::here("analysis.R"))
 
 cat(sprintf(
-  "Solving: num_species=%d  replicate=%d  scenario=%d  threads=%d\n",
-  num_species, replicate, scenario, num_threads
+  "Solving: num_species=%d  replicate=%d  scenario=%d  threads=%d  solver=%s\n",
+  num_species, replicate, scenario, num_threads, solver
 ))
 
 solve_single_scenario(
@@ -26,5 +29,6 @@ solve_single_scenario(
   scenario      = scenario,
   optim_verbose = TRUE,
   tl            = 18000,  # 5 hours — walltime is 5.5h to allow 30 min overhead
-  num_threads   = num_threads
+  num_threads   = num_threads,
+  solver        = solver
 )

@@ -9,7 +9,6 @@ library(ggplot2)
 library(tidyr)
 library(tidyterra)
 library(patchwork)
-library(gurobi)
 library(purrr)
 library(sf)
 library(readr)
@@ -30,22 +29,32 @@ try_solve <- function(p) {
   return(res)
 }
 
+# Attach the right solver add-on based on the solver argument.
+# "default" lets prioritizr auto-detect (Gurobi preferred locally).
+make_solver <- function(solver, optim_verbose, tl, num_threads) {
+  switch(
+    solver,
+    default = function(p) add_default_solver(p, verbose = optim_verbose, time_limit = tl, threads = num_threads),
+    gurobi  = function(p) add_gurobi_solver(p,  verbose = optim_verbose, time_limit = tl, threads = num_threads),
+    cplex   = function(p) add_cplex_solver(p,   verbose = optim_verbose, time_limit = tl, threads = num_threads),
+    stop("Unknown solver: ", solver, ". Use 'default', 'gurobi', or 'cplex'.")
+  )
+}
+
 # Build the list of 4 prioritizr problem objects ---------
 build_problems <- function(
   optim_verbose = FALSE,
   tl            = 3600,
-  num_threads   = 1
+  num_threads   = 1,
+  solver        = "default"
 ) {
+  attach_solver <- make_solver(solver, optim_verbose, tl, num_threads)
   # Planning Scenario 1: Historic Baseline only
   pv1 <- problem(cost, species_hb) |>
     add_manual_targets(targets_hb) |>
     add_min_set_objective() |>
     add_locked_in_constraints(pa) |>
-    add_default_solver(
-      verbose     = optim_verbose,
-      time_limit  = tl,
-      threads     = num_threads
-    )
+    attach_solver()
 
   # Planning Scenario 2: Fully Robust
   rpv1 <- problem(cost, species_subset) |>
@@ -53,11 +62,7 @@ build_problems <- function(
     robust.prioritizr::add_constant_robust_constraints(groups = groups) |>
     add_robust_min_set_objective() |>
     add_locked_in_constraints(pa) |>
-    add_default_solver(
-      verbose     = optim_verbose,
-      time_limit  = tl,
-      threads     = num_threads
-    )
+    attach_solver()
 
   # Planning Scenario 3: Chance Constraints
   rpv2 <- problem(cost, species_subset) |>
@@ -69,11 +74,7 @@ build_problems <- function(
     add_locked_in_constraints(pa) |>
     add_binary_decisions() |>
     robust.prioritizr::add_robust_min_set_objective(method = "chance") |>
-    add_default_solver(
-      verbose     = optim_verbose,
-      time_limit  = tl,
-      threads     = num_threads
-    )
+    attach_solver()
 
   # Planning Scenario 4: CVaR Constraints
   rpv3 <- problem(cost, species_subset) |>
@@ -85,11 +86,7 @@ build_problems <- function(
     add_locked_in_constraints(pa) |>
     add_binary_decisions() |>
     robust.prioritizr::add_robust_min_set_objective(method = "cvar") |>
-    add_default_solver(
-      verbose     = optim_verbose,
-      time_limit  = tl,
-      threads     = num_threads
-    )
+    attach_solver()
 
   list(pv1, rpv1, rpv2, rpv3)
 }
@@ -103,7 +100,8 @@ solve_single_scenario <- function(
   scenario      = 1,    # 1-4
   optim_verbose = FALSE,
   tl            = 3600,
-  num_threads   = 1
+  num_threads   = 1,
+  solver        = "default"
 ) {
   stopifnot(scenario %in% 1:4)
   set.seed(490129 + replicate - 1)
@@ -113,7 +111,8 @@ solve_single_scenario <- function(
   prob_list <- build_problems(
     optim_verbose = optim_verbose,
     tl            = tl,
-    num_threads   = num_threads
+    num_threads   = num_threads,
+    solver        = solver
   )
 
   p      <- prob_list[[scenario]]
@@ -147,7 +146,8 @@ solve_planning_problem <- function(
   replicate     = 1,
   optim_verbose = FALSE,
   tl            = 3600,
-  num_threads   = 1
+  num_threads   = 1,
+  solver        = "default"
 ) {
   set.seed(490129 + replicate - 1)
 
@@ -156,7 +156,8 @@ solve_planning_problem <- function(
   prob_list <- build_problems(
     optim_verbose = optim_verbose,
     tl            = tl,
-    num_threads   = num_threads
+    num_threads   = num_threads,
+    solver        = solver
   )
 
   output_dir <- here::here("output")

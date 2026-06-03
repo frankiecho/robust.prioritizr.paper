@@ -13,16 +13,16 @@
 # Load user config
 source ${SLURM_SUBMIT_DIR}/hpc/config.env
 
-# Load conda environment
+# Load conda environment and CPLEX module
 source /apps/anaconda/2024.02-1/etc/profile.d/conda.sh
 conda activate robust_pz
-
-export GRB_LICENSE_FILE=${GRB_LICENSE_FILE}
-export LD_LIBRARY_PATH=${GRB_LIB_PATH}:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/fcho0021/nh53/cplex2220/cplex/bin/x86-64_linux:/usr/local/gcc/5.4.0/lib64:$LD_LIBRARY_PATH
+export PRIORITIZR_SOLVER=cplex
 
 echo "=== Environment check ==="
 echo "R version:"; Rscript --version
-echo "Gurobi license: $GRB_LICENSE_FILE"
+echo "CPLEX: $(which cplex 2>/dev/null || echo 'not found')"
+echo "Rcplex installed: $(Rscript -e 'cat(requireNamespace(\"Rcplex\", quietly=TRUE))' 2>/dev/null)"
 echo "Start time: $(date)"
 
 cd $SLURM_SUBMIT_DIR
