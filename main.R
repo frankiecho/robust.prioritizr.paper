@@ -99,8 +99,11 @@ scenario_names <- data.frame(
 
 # Function to plot a planning solution
 plot_planning_soln <- function(soln) {
-  soln[soln == 1] <- 2
-  soln[pa == 1] <- 1
+  if (is.null(soln)) {
+    return(ggplot() + labs(title = "No solution (infeasible or solver error)") + theme_void())
+  }
+  soln <- terra::ifel(soln == 1, 2, soln)
+  soln <- terra::ifel(pa == 1, 1, soln)
   levels(soln) <- data.frame(
     id = c(0, 1, 2),
     cover = c("Not Current PA", "Current PA", "New PA")
@@ -122,6 +125,13 @@ plot_planning_soln <- function(soln) {
 }
 
 # 1. Prioritization maps
+for (i in seq_along(output)) {
+  cat(sprintf("Scenario %d (%s): soln is %s, solve_time = %.2f s\n",
+    i, problem_names[i],
+    if (is.null(output[[i]]$soln)) "NULL" else "OK",
+    as.numeric(output[[i]]$solve_time, units = "secs")
+  ))
+}
 maps <- map(output, \(x) terra::unwrap(x$soln))
 
 p1_map <- map(maps, plot_planning_soln) |>
