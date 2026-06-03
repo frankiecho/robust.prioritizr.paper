@@ -25,6 +25,6 @@ solve_single_scenario(
   replicate     = replicate,
   scenario      = scenario,
   optim_verbose = TRUE,
-  tl            = 3600,
+  tl            = 16200,  # 4.5 hours — leaves 30 min overhead within 5h walltime
   num_threads   = num_threads
 )

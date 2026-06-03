@@ -3,8 +3,8 @@ library(dplyr)
 library(tidyr)
 library(readr)
 
-# Time limit used in all runs (minutes)
-tl_mins <- 60
+# Time limit used in all runs (minutes) — must match tl in run_one_species_count.R
+tl_mins <- 270  # 16200 seconds = 4.5 hours
 
 problem_names <- c(
   "A. Non-robust: Assume historic baseline",
