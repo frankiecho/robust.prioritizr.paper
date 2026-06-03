@@ -1,3 +1,6 @@
 output/*
 *.DS_Store
 hpc/config.env
+logs/
+*.out
+*.err
