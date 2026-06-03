@@ -23,7 +23,7 @@ num_species <- 50
 # Main results: 50 species
 output <- solve_planning_problem(num_species = 50, replicate = 1)
 
-full_prob <- output[[length(output)]]$p
+full_prob <- prob_list[[length(prob_list)]]
 
 # Handle a prioritizr solution where there could be NULL due to infeasibility
 # full_prob is a problem with all uncertain scenarios, which needs to be specified to
@@ -161,6 +161,7 @@ output_clean <- map(
   full_prob = full_prob
 ) |>
   map(function(x) {
+    if (is.null(x$rep)) return(x)
     x$rep <- left_join(
       x$rep,
       species_details,
