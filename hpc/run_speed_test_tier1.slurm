@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --job-name=robust_pz_speed
-#SBATCH --array=1-360%2         # 9 species x 10 replicates x 4 scenarios
+#SBATCH --array=1-120%2    # tasks 1-120: species 18/30/50, max observed 3.2GB
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=48G             # sized for largest species tier (800/872); see run_speed_test_tier*.slurm
+#SBATCH --mem=4G
 #SBATCH --time=05:30:00
 #SBATCH --partition=comp
 #SBATCH --output=logs/speed_%A_%a.out

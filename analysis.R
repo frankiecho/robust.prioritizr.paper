@@ -18,15 +18,22 @@ library(readr)
 try_solve <- function(p) {
   start_time <- Sys.time()
   soln <- NULL
-  try(soln <- solve(p), silent = TRUE)
-  end_time <- Sys.time()
+  err  <- tryCatch(
+    { soln <- solve(p); NULL },
+    error   = function(e) conditionMessage(e),
+    warning = function(w) { soln <<- solve(p); NULL }
+  )
+  end_time   <- Sys.time()
   solve_time <- end_time - start_time
+  if (!is.null(err)) {
+    message("solve() error: ", err)
+  }
   if (!is.null(soln)) {
     soln <- terra::wrap(soln)
   }
   # NOTE: p is NOT saved here to avoid terra serialisation issues when
   # reading RDS files back across sessions. soln is terra::wrap()'d.
-  res <- list(soln = soln, solve_time = solve_time)
+  res <- list(soln = soln, solve_time = solve_time, error = err)
   return(res)
 }
 
