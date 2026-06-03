@@ -24,97 +24,155 @@ try_solve <- function(p) {
   if (!is.null(soln)) {
     soln <- terra::wrap(soln)
   }
-  res <- list(p = p, soln = soln, solve_time = solve_time)
+  # NOTE: p is NOT saved here to avoid terra serialisation issues when
+  # reading RDS files back across sessions. soln is terra::wrap()'d.
+  res <- list(soln = soln, solve_time = solve_time)
   return(res)
 }
 
-
-# Min number of species for this study = list of "threatened_species"
-# Max number of species for this study = 872
-solve_planning_problem <- function(
-  num_species  = 50,
-  replicate    = 1,
+# Build the list of 4 prioritizr problem objects ---------
+build_problems <- function(
   optim_verbose = FALSE,
-  tl           = 3600,
-  num_threads  = 1
+  tl            = 3600,
+  num_threads   = 1
 ) {
-  # Each replicate gets a different seed so species sampling varies
-  set.seed(490129 + replicate - 1)
-
-  # 3. Run the analysis --------------
-  rp_data_prep(num_species)
-
-  # Planning Scenario 1: Historic Baseline only -------
+  # Planning Scenario 1: Historic Baseline only
   pv1 <- problem(cost, species_hb) |>
     add_manual_targets(targets_hb) |>
     add_min_set_objective() |>
     add_locked_in_constraints(pa) |>
     add_default_solver(
-      verbose = optim_verbose,
-      time_limit = tl,
-      threads = num_threads
+      verbose     = optim_verbose,
+      time_limit  = tl,
+      threads     = num_threads
     )
 
-  # Planning Scenario 2: Fully Robust --------
+  # Planning Scenario 2: Fully Robust
   rpv1 <- problem(cost, species_subset) |>
     add_manual_targets(targets) |>
-    robust.prioritizr::add_constant_robust_constraints(
-      groups = groups
-    ) |>
+    robust.prioritizr::add_constant_robust_constraints(groups = groups) |>
     add_robust_min_set_objective() |>
     add_locked_in_constraints(pa) |>
     add_default_solver(
-      verbose = optim_verbose,
-      time_limit = tl,
-      threads = num_threads
+      verbose     = optim_verbose,
+      time_limit  = tl,
+      threads     = num_threads
     )
 
   # Planning Scenario 3: Chance Constraints
   rpv2 <- problem(cost, species_subset) |>
     add_manual_targets(targets) |>
     robust.prioritizr::add_constant_robust_constraints(
-      groups = groups,
-      conf_level = conf_level
+      groups      = groups,
+      conf_level  = conf_level
     ) |>
     add_locked_in_constraints(pa) |>
     add_binary_decisions() |>
     robust.prioritizr::add_robust_min_set_objective(method = "chance") |>
     add_default_solver(
-      verbose = optim_verbose,
-      time_limit = tl,
-      threads = num_threads
+      verbose     = optim_verbose,
+      time_limit  = tl,
+      threads     = num_threads
     )
 
   # Planning Scenario 4: CVaR Constraints
   rpv3 <- problem(cost, species_subset) |>
     add_manual_targets(targets) |>
     robust.prioritizr::add_constant_robust_constraints(
-      groups = groups,
-      conf_level = conf_level
+      groups      = groups,
+      conf_level  = conf_level
     ) |>
     add_locked_in_constraints(pa) |>
     add_binary_decisions() |>
     robust.prioritizr::add_robust_min_set_objective(method = "cvar") |>
     add_default_solver(
-      verbose = optim_verbose,
-      time_limit = tl,
-      threads = num_threads
+      verbose     = optim_verbose,
+      time_limit  = tl,
+      threads     = num_threads
     )
 
-  # Solve iteratively ------------
-  prob_list <- list(pv1, rpv1, rpv2, rpv3)
+  list(pv1, rpv1, rpv2, rpv3)
+}
+
+# Solve a single scenario (for HPC parallelisation) --------
+# Saves a self-contained per-scenario RDS with no terra references in the
+# problem object. Output: vic_soln_{num_species}_rep{replicate}_scenario{scenario}.rds
+solve_single_scenario <- function(
+  num_species   = 50,
+  replicate     = 1,
+  scenario      = 1,    # 1-4
+  optim_verbose = FALSE,
+  tl            = 3600,
+  num_threads   = 1
+) {
+  stopifnot(scenario %in% 1:4)
+  set.seed(490129 + replicate - 1)
+
+  rp_data_prep(num_species)
+
+  prob_list <- build_problems(
+    optim_verbose = optim_verbose,
+    tl            = tl,
+    num_threads   = num_threads
+  )
+
+  p      <- prob_list[[scenario]]
+  result <- try_solve(p)
+
+  # Add metadata
+  result$num_species <- num_species
+  result$replicate   <- replicate
+  result$scenario    <- scenario
+
   output_dir <- here::here("output")
   dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
-  readr::write_rds(prob_list, file.path(output_dir, glue::glue("vic_prob_{num_species}_rep{replicate}.rds")))
+  out_path <- file.path(
+    output_dir,
+    glue::glue("vic_soln_{num_species}_rep{replicate}_scenario{scenario}.rds")
+  )
+  readr::write_rds(result, out_path)
+  cat(sprintf(
+    "Saved: %s  |  solve_time: %.4f min\n",
+    basename(out_path),
+    as.numeric(result$solve_time, units = "mins")
+  ))
+  return(result)
+}
+
+# Solve all 4 scenarios sequentially (used by main.R) ------
+# Min number of species for this study = list of "threatened_species"
+# Max number of species for this study = 872
+solve_planning_problem <- function(
+  num_species   = 50,
+  replicate     = 1,
+  optim_verbose = FALSE,
+  tl            = 3600,
+  num_threads   = 1
+) {
+  set.seed(490129 + replicate - 1)
+
+  rp_data_prep(num_species)
+
+  prob_list <- build_problems(
+    optim_verbose = optim_verbose,
+    tl            = tl,
+    num_threads   = num_threads
+  )
+
+  output_dir <- here::here("output")
+  dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 
   output <- map(prob_list, try_solve)
 
-  # Wrap all objects before saving ---------
-  cost <- terra::wrap(cost)
-  species_hb <- terra::wrap(species_hb)
+  # Wrap terra objects before saving
+  cost          <- terra::wrap(cost)
+  species_hb    <- terra::wrap(species_hb)
   species_subset <- terra::wrap(species_subset)
 
-  readr::write_rds(output, file.path(output_dir, glue::glue("vic_soln_{num_species}_rep{replicate}.rds")))
+  readr::write_rds(
+    output,
+    file.path(output_dir, glue::glue("vic_soln_{num_species}_rep{replicate}.rds"))
+  )
   list2env(as.list(environment()), envir = .GlobalEnv)
   return(output)
 }

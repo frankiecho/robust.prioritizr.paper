@@ -12,8 +12,8 @@
 On your local machine:
 
 ```bash
-rsync -avz /Users/fcho0021/Documents/GitHub/robust_prioritizr_paper/ \
-  fcho0021@m3.massive.org.au:/home/fcho0021/nh53/robust_prioritizr_paper/
+rsync -avz $LOCAL_PROJECT_DIR/ \
+  $HPC_USER@m3.massive.org.au:$HPC_PROJECT_DIR/
 ```
 
 ---
@@ -30,11 +30,11 @@ rsync -avz /Users/fcho0021/Documents/GitHub/robust_prioritizr_paper/ \
    ```
 4. Copy it to M3:
    ```bash
-   scp ~/Downloads/gurobi.lic fcho0021@m3.massive.org.au:/home/fcho0021/nh53/gurobi.lic
+   scp ~/Downloads/gurobi.lic $HPC_USER@m3.massive.org.au:$GRB_LICENSE_FILE
    ```
 5. Verify it is readable:
    ```bash
-   cat /home/fcho0021/nh53/gurobi.lic
+   cat $GRB_LICENSE_FILE
    ```
 
 ### Activating the license inside conda
@@ -43,13 +43,13 @@ The Gurobi R package reads the license via the `GRB_LICENSE_FILE` environment va
 Set it before running any R code:
 
 ```bash
-export GRB_LICENSE_FILE=/home/fcho0021/nh53/gurobi.lic
+export GRB_LICENSE_FILE=$GRB_LICENSE_FILE
 ```
 
 Make it permanent by adding to `~/.bashrc`:
 
 ```bash
-echo 'export GRB_LICENSE_FILE=/home/fcho0021/nh53/gurobi.lic' >> ~/.bashrc
+echo 'export GRB_LICENSE_FILE=$GRB_LICENSE_FILE' >> ~/.bashrc
 source ~/.bashrc
 ```
 
@@ -101,13 +101,13 @@ Rscript -e "install.packages(c(
 
 ```bash
 # Download the Gurobi Linux tarball (if not already done)
-cd /home/fcho0021/nh53/
+cd $HPC_SCRATCH_DIR/
 wget https://packages.gurobi.com/13.0/gurobi13.0.0_linux64.tar.gz
 tar -xzf gurobi13.0.0_linux64.tar.gz
 
 # Install the R package
 Rscript -e "install.packages(
-  '/home/fcho0021/nh53/gurobi1300/linux64/R/gurobi_13.0-0_R_4.5.0.tar.gz',
+  '$HPC_SCRATCH_DIR/gurobi1300/linux64/R/gurobi_13.0-0_R_4.5.0.tar.gz',
   repos = NULL, type = 'source'
 )"
 ```
@@ -141,9 +141,9 @@ source ~/.bashrc
 Compute nodes may have no internet access. Download once on the login node:
 
 ```bash
-cd /home/fcho0021/nh53/robust_prioritizr_paper
+cd $HPC_PROJECT_DIR
 conda activate robust_pz
-export GRB_LICENSE_FILE=/home/fcho0021/nh53/gurobi.lic
+export GRB_LICENSE_FILE=$GRB_LICENSE_FILE
 Rscript -e "source('data_prep.R'); rp_data_prep(18)"
 ```
 
@@ -151,26 +151,29 @@ This downloads all files into `data/`. All subsequent runs will use the cached f
 
 ---
 
-## Step 5: Create the logs directory
+## Step 5: Create the logs directory and configure user settings
 
 ```bash
-cd /home/fcho0021/nh53/robust_prioritizr_paper
+cd $HPC_PROJECT_DIR
 mkdir -p logs output
 ```
 
----
+Copy the config template and fill in your details:
 
-## Step 6: Update email addresses in SLURM scripts
+```bash
+cp hpc/config.env.example hpc/config.env
+nano hpc/config.env   # set HPC_USER, HPC_SCRATCH_DIR, SLURM_EMAIL, etc.
+```
 
-Edit `hpc/run_speed_test.slurm`, `hpc/run_aggregation.slurm`, and `hpc/test_setup.slurm`
-and replace `YOUR_EMAIL@monash.edu` with your actual Monash email.
+> **Note:** `hpc/config.env` is gitignored and will never be committed.
+> All SLURM scripts source it automatically at runtime.
 
 ---
 
 ## Step 7: Run the smoke test first
 
 ```bash
-cd /home/fcho0021/nh53/robust_prioritizr_paper
+cd $HPC_PROJECT_DIR
 sbatch hpc/test_setup.slurm
 ```
 
@@ -188,7 +191,7 @@ Expected output ends with solve times for 4 problems printed to stdout and
 ## Step 8: Submit the full speed test (9 species counts × 10 replicates = 90 jobs)
 
 ```bash
-cd /home/fcho0021/nh53/robust_prioritizr_paper
+cd $HPC_PROJECT_DIR
 ARRAY_JOB=$(sbatch --parsable hpc/run_speed_test.slurm)
 echo "Submitted array job: $ARRAY_JOB"
 ```
@@ -218,8 +221,8 @@ This writes:
 Copy outputs back to your local machine:
 
 ```bash
-rsync -avz fcho0021@m3.massive.org.au:/home/fcho0021/nh53/robust_prioritizr_paper/output/ \
-  /Users/fcho0021/Documents/GitHub/robust_prioritizr_paper/output/
+rsync -avz $HPC_USER@m3.massive.org.au:$HPC_PROJECT_DIR/output/ \
+  $LOCAL_PROJECT_DIR/output/
 ```
 
 Then run:

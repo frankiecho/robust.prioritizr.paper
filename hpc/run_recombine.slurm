@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH --job-name=robust_pz_test
+#SBATCH --job-name=robust_pz_recombine
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=16G
 #SBATCH --time=00:30:00
 #SBATCH --partition=comp
-#SBATCH --output=logs/test_%j.out
-#SBATCH --error=logs/test_%j.err
+#SBATCH --output=logs/recombine_%j.out
+#SBATCH --error=logs/recombine_%j.err
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=${SLURM_EMAIL}
 
@@ -20,12 +20,7 @@ conda activate robust_pz
 export GRB_LICENSE_FILE=${GRB_LICENSE_FILE}
 export LD_LIBRARY_PATH=${GRB_LIB_PATH}:$LD_LIBRARY_PATH
 
-echo "=== Environment check ==="
-echo "R version:"; Rscript --version
-echo "Gurobi license: $GRB_LICENSE_FILE"
-echo "Start time: $(date)"
-
+echo "Recombining scenario outputs: $(date)"
 cd $SLURM_SUBMIT_DIR
-Rscript hpc/run_one_species_count.R 18 1 1
-
-echo "=== Test complete: $(date) ==="
+Rscript hpc/recombine_results.R
+echo "Done: $(date)"

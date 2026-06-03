@@ -8,15 +8,17 @@
 #SBATCH --output=logs/agg_%j.out
 #SBATCH --error=logs/agg_%j.err
 #SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=YOUR_EMAIL@monash.edu
+#SBATCH --mail-user=${SLURM_EMAIL}
+
+# Load user config
+source ${SLURM_SUBMIT_DIR}/hpc/config.env
 
 # Load conda environment
 source /apps/anaconda/2024.02-1/etc/profile.d/conda.sh
 conda activate robust_pz
 
-# Gurobi license and shared library
-export GRB_LICENSE_FILE=/home/fcho0021/nh53/gurobi.lic
-export LD_LIBRARY_PATH=/home/fcho0021/nh53/gurobi1300/linux64/lib:$LD_LIBRARY_PATH
+export GRB_LICENSE_FILE=${GRB_LICENSE_FILE}
+export LD_LIBRARY_PATH=${GRB_LIB_PATH}:$LD_LIBRARY_PATH
 
 echo "Aggregating speed test results: $(date)"
 cd $SLURM_SUBMIT_DIR

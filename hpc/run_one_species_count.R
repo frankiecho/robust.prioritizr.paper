@@ -1,39 +1,30 @@
 library(here)
 
-# Read arguments: num_species and replicate number
+# Read arguments: num_species, replicate, scenario
 args <- commandArgs(trailingOnly = TRUE)
-if (length(args) < 2) stop("Usage: Rscript run_one_species_count.R <num_species> <replicate>")
-num_species <- as.integer(args[1])
-replicate   <- as.integer(args[2])
+if (length(args) < 3) {
+  stop("Usage: Rscript run_one_species_count.R <num_species> <replicate> <scenario>")
+}
+num_species  <- as.integer(args[1])
+replicate    <- as.integer(args[2])
+scenario     <- as.integer(args[3])
 
-# Get number of threads from SLURM environment (matches --cpus-per-task)
-num_threads <- as.integer(Sys.getenv("SLURM_CPUS_PER_TASK", unset = "1"))
+# Threads from SLURM environment
+num_threads  <- as.integer(Sys.getenv("SLURM_CPUS_PER_TASK", unset = "1"))
 
 source(here::here("data_prep.R"))
 source(here::here("analysis.R"))
 
 cat(sprintf(
-  "Solving for %d species, replicate %d, with %d threads\n",
-  num_species, replicate, num_threads
+  "Solving: num_species=%d  replicate=%d  scenario=%d  threads=%d\n",
+  num_species, replicate, scenario, num_threads
 ))
 
-output <- solve_planning_problem(
-  num_species  = num_species,
-  replicate    = replicate,
+solve_single_scenario(
+  num_species   = num_species,
+  replicate     = replicate,
+  scenario      = scenario,
   optim_verbose = TRUE,
-  tl           = 3600,   # 60-minute time limit per solve
-  num_threads  = num_threads
+  tl            = 3600,
+  num_threads   = num_threads
 )
-
-# Print solve times to stdout for the log
-problem_names <- c(
-  "A. Non-robust",
-  "B. Fully Robust",
-  "C. Partially Robust: Chance Constraints",
-  "D. Partially Robust: CVaR Constraints"
-)
-times <- sapply(output, \(x) as.numeric(x$solve_time, units = "mins"))
-cat("\nSolve times (minutes):\n")
-for (i in seq_along(times)) {
-  cat(sprintf("  %s: %.4f min\n", problem_names[i], times[i]))
-}
