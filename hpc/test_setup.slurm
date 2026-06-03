@@ -10,16 +10,20 @@
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=YOUR_EMAIL@monash.edu
 
-module load r/4.4.1
-module load gurobi/13.0.0
-export GRB_LICENSE_FILE=/projects/$USER/gurobi.lic
+# Load conda environment
+source /apps/anaconda/2024.02-1/etc/profile.d/conda.sh
+conda activate robust_pz
+
+# Gurobi license and shared library
+export GRB_LICENSE_FILE=/home/fcho0021/nh53/gurobi.lic
+export LD_LIBRARY_PATH=/home/fcho0021/nh53/gurobi1300/linux64/lib:$LD_LIBRARY_PATH
 
 echo "=== Environment check ==="
 echo "R version:"; Rscript --version
 echo "Gurobi license: $GRB_LICENSE_FILE"
 echo "Start time: $(date)"
 
-cd $SLURM_SUBMIT_DIR/..
+cd $SLURM_SUBMIT_DIR
 
 # Run the smallest problem (18 species, replicate 1) as a smoke test
 Rscript hpc/run_one_species_count.R 18 1

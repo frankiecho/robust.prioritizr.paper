@@ -11,12 +11,13 @@
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=YOUR_EMAIL@monash.edu
 
-# Load modules
-module load r/4.4.1
-module load gurobi/13.0.0
+# Load conda environment
+source /apps/anaconda/2024.02-1/etc/profile.d/conda.sh
+conda activate robust_pz
 
-# Point to Gurobi license file
-export GRB_LICENSE_FILE=/projects/$USER/gurobi.lic
+# Gurobi license and shared library
+export GRB_LICENSE_FILE=/home/fcho0021/nh53/gurobi.lic
+export LD_LIBRARY_PATH=/home/fcho0021/nh53/gurobi1300/linux64/lib:$LD_LIBRARY_PATH
 
 # Map task ID (1-90) to species count and replicate
 # Tasks 1-10  -> species 18,  replicates 1-10
@@ -31,7 +32,7 @@ echo "Task $SLURM_ARRAY_TASK_ID: num_species=$NUM_SPECIES replicate=$REPLICATE"
 echo "Start time: $(date)"
 
 # Run from the project root
-cd $SLURM_SUBMIT_DIR/..
+cd $SLURM_SUBMIT_DIR
 
 Rscript hpc/run_one_species_count.R $NUM_SPECIES $REPLICATE
 
