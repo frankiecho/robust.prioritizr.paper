@@ -45,7 +45,7 @@ read_scenario <- function(n, r, s) {
 
   # Must have been written after the CPLEX jobs started (exclude old Gurobi files)
   mtime <- as.integer(file.info(path)$mtime)
-  if (mtime <= cplex_start_epoch) {
+  if (mtime < cplex_start_epoch) {
     message(glue("Skipping (pre-CPLEX timestamp): vic_soln_{n}_rep{r}_scenario{s}.rds"))
     return(NULL)
   }
