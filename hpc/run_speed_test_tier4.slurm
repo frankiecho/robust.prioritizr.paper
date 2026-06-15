@@ -38,6 +38,13 @@ echo "Task $SLURM_ARRAY_TASK_ID: num_species=$NUM_SPECIES replicate=$REPLICATE s
 echo "Start time: $(date)"
 
 cd $SLURM_SUBMIT_DIR
+
+# Record the epoch of this run's start (first task to run wins; used by
+# aggregate_results.R to exclude pre-existing RDS files from earlier runs)
+EPOCH_FILE="output/cplex_run_start_epoch.txt"
+if [ ! -f "$EPOCH_FILE" ]; then
+  echo "$(date +%s)" > "$EPOCH_FILE"
+fi
 Rscript hpc/run_one_species_count.R $NUM_SPECIES $REPLICATE $SCENARIO
 
 echo "End time: $(date)"
