@@ -1,6 +1,10 @@
-# Robust Conservation Prioritization under Climate Uncertainty
+# robust.prioritizr: Robust Systematic Conservation Prioritization
 
-Reproducible analysis code for the paper comparing robust and non-robust spatial conservation planning approaches across climate change scenarios in Victoria, Australia.
+Replication code for the paper:
+
+> Cho, F. H. T. & Hanson, J. O. (in review). `robust.prioritizr`: Robust Systematic Conservation Prioritization.
+
+This repository contains the case study analysis used to demonstrate the [`robust.prioritizr`](https://CRAN.R-project.org/package=robust.prioritizr) R package, which extends [`prioritizr`](https://prioritizr.net) to identify protected area networks that are robust to climate-change uncertainty. The case study covers 872 native species across Victoria, Australia, using four climate-change scenarios (SSP1-2.6, SSP2-4.5, SSP3-7.0, SSP5-8.5) and five time-steps.
 
 Four planning approaches are evaluated:
 
@@ -11,13 +15,13 @@ Four planning approaches are evaluated:
 | C | Partially Robust: Chance Constraints |
 | D | Partially Robust: Conditional Value-at-Risk (CVaR) Constraints |
 
-Species distribution data spans five climate scenarios (historic baseline, SSP1-2.6, SSP2-4.5, SSP3-7.0, SSP5-8.5) across multiple timesteps.
+Species distribution data spans five climate scenarios (historic baseline, SSP1-2.6, SSP2-4.5, SSP3-7.0, SSP5-8.5) across multiple timesteps. For the main results, 50 species are used; the full 872-species analysis is run on HPC.
 
 ## Dependencies
 
 - R ≥ 4.4
+- [`robust.prioritizr`](https://CRAN.R-project.org/package=robust.prioritizr) (on CRAN)
 - [`prioritizr`](https://prioritizr.net)
-- [`robust.prioritizr`](https://github.com/frankiecho/robust.prioritizr)
 - [`terra`](https://rspatial.github.io/terra/), `sf`, `tidyterra`
 - `dplyr`, `tidyr`, `ggplot2`, `patchwork`, `purrr`, `readr`, `stringr`, `cowplot`
 - A MILP solver: **CPLEX** (used on HPC) or **Gurobi** (local)
@@ -26,17 +30,24 @@ Install R packages:
 
 ```r
 install.packages(c(
-  "prioritizr", "terra", "sf", "tidyterra", "dplyr", "tidyr",
+  "robust.prioritizr", "prioritizr",
+  "terra", "sf", "tidyterra", "dplyr", "tidyr",
   "ggplot2", "patchwork", "purrr", "readr", "stringr", "cowplot",
   "here", "tibble", "cli", "glue"
 ))
-# robust.prioritizr from GitHub:
-remotes::install_github("frankiecho/robust.prioritizr")
 ```
 
 ## Running the analysis locally
 
-### 1. Prepare data
+### 1. Create the output directories
+
+These directories are gitignored and must be created before running the analysis:
+
+```bash
+mkdir -p data output plots tables logs
+```
+
+### 2. Prepare data
 
 Downloads and caches species distribution rasters, cost layer, and protected area mask into `data/`:
 
@@ -47,7 +58,7 @@ rp_data_prep(num_species = 50)
 
 Data are fetched from a remote source on first run; subsequent runs use the local cache.
 
-### 2. Run main analysis and generate figures/tables
+### 3. Run main analysis and generate figures/tables
 
 ```r
 source("main.R")
@@ -61,7 +72,7 @@ Outputs written to:
 - `tables/tab_cost.tex` — cost metric table
 - `tables/tab_solve_time_main.tex` — solver time table
 
-### 3. Run solver speed test (optional, single replicate)
+### 4. Run solver speed test (optional, single replicate)
 
 ```r
 source("speed_test.R")
