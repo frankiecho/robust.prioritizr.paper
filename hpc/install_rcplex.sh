@@ -5,14 +5,25 @@
 # Prerequisites:
 #   1. Download IBM ILOG CPLEX Optimization Studio V22.2 for Linux x86-64 from
 #      IBM Academic Initiative and transfer to M3:
-#        scp IBM_ILOG_CPLEX_OptStdv22.2_LIN.bin fcho0021@m3.massive.org.au:/home/fcho0021/nh53/
+#        scp IBM_ILOG_CPLEX_OptStdv22.2_LIN.bin your_username@m3.massive.org.au:/home/your_username/nh53/
 #   2. Run this script from the project root on M3:
 #        bash hpc/install_rcplex.sh
 
 set -e
 
-CPLEX_INSTALLER=/home/fcho0021/nh53/IBM_ILOG_CPLEX_OptStdv22.2_LIN.bin
-CPLEX_INSTALL_DIR=/home/fcho0021/nh53/cplex2220
+# Load user config if available
+SCRIPT_DIR="$(dirname "$0")"
+if [ -f "${SCRIPT_DIR}/config.env" ]; then
+  source "${SCRIPT_DIR}/config.env"
+fi
+
+if [ -z "${HPC_SCRATCH_DIR}" ]; then
+  echo "Error: HPC_SCRATCH_DIR not set. Please copy config.env.example to config.env and fill in details."
+  exit 1
+fi
+
+CPLEX_INSTALLER=${HPC_SCRATCH_DIR}/IBM_ILOG_CPLEX_OptStdv22.2_LIN.bin
+CPLEX_INSTALL_DIR=${HPC_SCRATCH_DIR}/cplex2220
 CPLEX_INC=${CPLEX_INSTALL_DIR}/cplex/include
 CPLEX_BIN=${CPLEX_INSTALL_DIR}/cplex/bin/x86-64_linux
 # GCC 5.4.0 lib dir — needed because libcplex2220.so links against it
