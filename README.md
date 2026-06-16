@@ -1,7 +1,6 @@
-# robust.prioritizr: Robust Systematic Conservation Prioritization
+# Replication code for the paper: _robust.prioritizr: Robust Systematic Conservation Prioritization_
 
-Replication code for the paper:
-
+Citation:
 > Cho, F. H. T. & Hanson, J. O. (in review). `robust.prioritizr`: Robust Systematic Conservation Prioritization.
 
 This repository contains the case study analysis used to demonstrate the [`robust.prioritizr`](https://CRAN.R-project.org/package=robust.prioritizr) R package, which extends [`prioritizr`](https://prioritizr.net) to identify protected area networks that are robust to climate-change uncertainty. The case study covers 872 native species across Victoria, Australia, using four climate-change scenarios (SSP1-2.6, SSP2-4.5, SSP3-7.0, SSP5-8.5) and five time-steps.
