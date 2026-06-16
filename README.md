@@ -1,4 +1,4 @@
-# Replication code for the paper: _robust.prioritizr: Robust Systematic Conservation Prioritization_
+# _robust.prioritizr: Robust Systematic Conservation Prioritization_ (Replication Code)
 
 Citation:
 > Cho, F. H. T. & Hanson, J. O. (in review). `robust.prioritizr`: Robust Systematic Conservation Prioritization.
