@@ -17,7 +17,7 @@ source ${SLURM_SUBMIT_DIR}/hpc/config.env
 # Load conda environment and CPLEX module
 source /apps/anaconda/2024.02-1/etc/profile.d/conda.sh
 conda activate robust_pz
-export LD_LIBRARY_PATH=/home/fcho0021/nh53/cplex2220/cplex/bin/x86-64_linux:/usr/local/gcc/5.4.0/lib64:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=${HPC_SCRATCH_DIR}/cplex2220/cplex/bin/x86-64_linux:/usr/local/gcc/5.4.0/lib64:$LD_LIBRARY_PATH
 export PRIORITIZR_SOLVER=cplex
 
 # Map task ID (1-360) to species count, replicate, scenario
